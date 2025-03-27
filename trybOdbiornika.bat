@@ -1,0 +1,1 @@
+python main.py receive --file testOdbior.txt --port COM11 --baudrate 9600 --crc
