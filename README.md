@@ -16,4 +16,5 @@ Uwaga: przy instalacji sterownika zaznacz "Ufaj firmie". Bez tego Windows nie uz
 4. Wprowadź komendę: install PortName=COM10 PortName=COM11
 Utworzy ona dwa wirtualne porty COM10 i COM11 oraz je powiąże między sobą.
 5. Wejdź w menadżer urządzeń (device manager) w windowsie i sprawdź czy w zakładce "com0com" nie wyświetlają się znaki ostrzeżenia przy com0com.
-6. Otwórz główny folder z programem (main.py) i przenieś tam "trybOdbiornika.bat" oraz "trybNadajnika.bat"
+6. Otwórz główny folder z programem (main.py). Powinny się w nim znaleźć także pliki: testNadaj.txt, testOdbior.txt, trybNadajnika.bat oraz trybOdbiornika.bat. Pliki .bat wykonują komendę, która otwiera skrypt w pythonie z odpowiednimi argumentami.
+7. Otwórz dwa okna CMD (lub PowerShell). W pierwszym uruchom trybNadajnika.bat, w drugim trybOdbiornika.bat. Zaczekaj chwilę, a komunikacja powinna przejść.
