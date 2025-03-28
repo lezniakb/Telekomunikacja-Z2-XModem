@@ -156,21 +156,23 @@ def nadajWiadomosc(port, message, uzywajCRC=True, timeout=15):
             print(f"Nie udało się wysłać bloku {numerBloku} (limit retransmisji: {powtorzenie})")
             return False
 
-    # Wysyłanie EOT
+    # EOT - koniec transmisji
     powtorzenie = 0
     while powtorzenie < 10:
+        # wyslij komunikat o zakonczeniu transmisji
         port.write(EOT)
-        trial_start = time.time()
+        start = time.time()
         odpowiedz = None
-        while time.time() - trial_start < timeout:
+        while time.time() - start < timeout:
+            # jesli w buforze znajdzie sie jakis znak
             if port.in_waiting > 0:
                 odpowiedz = port.read(1)
                 if odpowiedz == ACK:
-                    print("Transmisja zakończona pomyślnie.")
+                    print("Odbiornik potwierdził zakończenie komunikacji, operacja przebiegła pomyślnie.")
                     return
             time.sleep(0.1)
         powtorzenie += 1
-    print("Nie udało się zakończyć transmisji.")
+    print("Odbiornik nie potwierdził zakończenie komunikacji, wystąpił błąd.")
 
 # main
 port = ""
