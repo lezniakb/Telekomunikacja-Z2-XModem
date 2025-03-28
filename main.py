@@ -106,57 +106,70 @@ def nadajWiadomosc(port, message, uzywajCRC=True, timeout=15):
     print("Odebrano sygnał inicjujący od odbiornika:", odebranyZnakASCII)
 
     # do zmiany to nizej
-    blok_number = 1
+    numerBloku = 1
     for blok in bloki:
-        retry_count = 0
-        while retry_count < 10:
-            # Budowa nagłówka: SOH, numer bloku, dopełnienie (255 - numer bloku)
-            header = SOH + bytes([blok_number & 0xFF]) + bytes([(255 - blok_number) & 0xFF])
-            if uzywajCRC:
-                error_val = obliczCRC(blok)
-                error_bytes = error_val.to_bytes(2, byteorder="big")
+        powtorzenie = 0
+        # ustaw 'timeout' na maksymalnie 10 powtorzen
+        while powtorzenie < 10:
+            # naglowek = SOH, numer bloku (zapisany bajtowo), dopełnienie (255 - numer bloku)
+            numerBlokuBajt = bytes([numerBloku & 0xFF])
+            dopelnienie = bytes([(255 - numerBloku) & 0xFF])
+
+            naglowek = SOH + numerBlokuBajt + dopelnienie
+
+            # jesli uzytkownik zdecydowal sie na uzycie CRC
+            if uzywajCRC == True:
+                wartoscCRC = obliczCRC(blok)
+                crcBajty = wartoscCRC.to_bytes(2, byteorder="big")
             else:
-                error_val = obliczChecksume(blok)
-                error_bytes = bytes([error_val])
-            packet = header + blok + error_bytes
-            print(f"Wysyłanie bloku {blok_number} (próba {retry_count+1})...")
+                # jesli nie crc, to checksuma
+                wartoscCRC = obliczChecksume(blok)
+                crcBajty = bytes([wartoscCRC])
+
+            packet = naglowek + blok + crcBajty
+            print(f"Nadawanie bloku: {numerBloku}, próba: {powtorzenie+1})...")
             port.write(packet)
-            # Oczekiwanie na odpowiedź (ACK lub NAK)
-            trial_start = time.time()
-            response = None
-            while time.time() - trial_start < timeout:
+            # czekanie na odpowiedz od odbiorcy
+            start = time.time()
+            odpowiedz = None
+
+            while time.time() - start < timeout:
+                # jesli w buforze (in_waiting) znajdzie sie jakis znak, to go odczytaj i zakoncz petle
                 if port.in_waiting > 0:
-                    response = port.read(1)
+                    odpowiedz = port.read(1)
                     break
                 time.sleep(0.1)
-            if response == ACK:
-                print(f"Blok {blok_number} wysłany poprawnie.")
-                blok_number += 1
+            # jesli odpowiedz to ACK (zmienna globalna)
+            if odpowiedz == ACK:
+                print(f"Blok {numerBloku} wysłany poprawnie")
+                numerBloku += 1
                 break
-            elif response == NAK:
-                print(f"Blok {blok_number} odebrany błędnie, retransmisja (próba {retry_count+1}).")
-                retry_count += 1
+            # NAK (not acknowleged), odebrany blednie
+            elif odpowiedz == NAK:
+                print(f"Blok {numerBloku} odebrany błędnie, próba retransmisji: {powtorzenie+1}...")
+                powtorzenie += 1
+            # jesli odebrany znak to nie jest to czego sie spodziewamy
             else:
-                print(f"Blok {blok_number}: brak odpowiedzi lub nieznany znak, retransmisja (próba {retry_count+1}).")
-                retry_count += 1
+                print(f"Blok {numerBloku}: brak odpowiedzi albo niewłaściwy znak, próba retransmisji: {powtorzenie+1}).")
+                powtorzenie += 1
         else:
-            print("Przekroczono limit retransmisji dla bloku", blok_number)
-            return
+            print(f"Nie udało się wysłać bloku {numerBloku} (limit retransmisji: {powtorzenie})")
+            return False
 
     # Wysyłanie EOT
-    retry_count = 0
-    while retry_count < 10:
+    powtorzenie = 0
+    while powtorzenie < 10:
         port.write(EOT)
         trial_start = time.time()
-        response = None
+        odpowiedz = None
         while time.time() - trial_start < timeout:
             if port.in_waiting > 0:
-                response = port.read(1)
-                if response == ACK:
+                odpowiedz = port.read(1)
+                if odpowiedz == ACK:
                     print("Transmisja zakończona pomyślnie.")
                     return
             time.sleep(0.1)
-        retry_count += 1
+        powtorzenie += 1
     print("Nie udało się zakończyć transmisji.")
 
 # main
