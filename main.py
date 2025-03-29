@@ -3,12 +3,12 @@ import time
 import sys
 
 # definicje znakow (zapisane w hex)
-SOH = b'\x01'       # poczatek blok
-EOT = b'\x04'       # koniec transmisji
-ACK = b'\x06'       # pozytywne potwierdzenie odbioru (acknowledged)
-NAK = b'\x15'       # negatywne potwierdzenie (not acknowledged)
-CAN = b'\x18'       # anuluj transmisje (cancel)
-CHAR_C = b'C'       # do trybu CRC
+SOH = b"\x01"       # poczatek blok
+EOT = b"\x04"       # koniec transmisji
+ACK = b"\x06"       # pozytywne potwierdzenie odbioru (acknowledged)
+NAK = b"\x15"       # negatywne potwierdzenie (not acknowledged)
+CAN = b"\x18"       # anuluj transmisje (cancel)
+CHAR_C = b"C"       # do trybu CRC
 ROZMIAR_BLOKU = 128    # rozmiar bloku danych
 DEBUG_FLAG = 1
 
@@ -72,12 +72,12 @@ def podzielNaBloki(wiadomosc):
     debug(bloki)
     return bloki
 
-def nadajWiadomosc(port, message, uzywajCRC=True, timeout=10):
+def nadajWiadomosc(port, komunikat, uzywajCRC=True, timeout=10):
     # funkcja ktora wysyla wiadomosc przez protokol Xmodem
     # kazdy blok ma po 128 bajtow
     # format: [SOH][blok_num][~blok_num][128 bajtów danych][error_check]
 
-    wiadomosc = message.encode("utf-8")
+    wiadomosc = komunikat.encode("utf-8")
     bloki = podzielNaBloki(wiadomosc)
 
     print("Oczekiwanie na inicjację od strony odbiornika (znak 'C' lub 'NAK')...")
@@ -96,14 +96,12 @@ def nadajWiadomosc(port, message, uzywajCRC=True, timeout=10):
                 znakStartu = ch
                 break
         # jesli nie ma bajtow w buforze, to zaczekaj sekunde przed ponownym sprawdzeniem
-        debug("Brak odpowiedzi..")
         time.sleep(1)
 
     if znakStartu is None:
         print("Timeout! Nie otrzymano odpowiedzi od odbiornika przez ostatenie 60 sekund.")
         return False
-    odebranyZnakASCII = ord(znakStartu)
-    print("Odebrano sygnał inicjujący od odbiornika:", odebranyZnakASCII)
+    print("Odebrano sygnał inicjujący od odbiornika:", znakStartu)
 
     # do zmiany to nizej
     numerBloku = 1
@@ -127,7 +125,7 @@ def nadajWiadomosc(port, message, uzywajCRC=True, timeout=10):
                 crcBajty = bytes([wartoscCRC])
 
             packet = naglowek + blok + crcBajty
-            print(f"Nadawanie bloku: {numerBloku}, próba: {powtorzenie+1})...")
+            print(f"Nadawanie bloku: {numerBloku}, próba: {powtorzenie+1}...")
             port.write(packet)
             # czekanie na odpowiedz od odbiorcy
             start = time.time()
@@ -174,6 +172,96 @@ def nadajWiadomosc(port, message, uzywajCRC=True, timeout=10):
         powtorzenie += 1
     print("Odbiornik nie potwierdził zakończenie komunikacji, wystąpił błąd.")
 
+
+def odbierzWiadomosc(port, uzywajCRC=True, timeout=10):
+    # funkcja ktora odbiera wiadomosc przez protokol XModem
+    # format: [SOH][blok_num][~blok_num][128 bajtów danych][error_check]
+    if uzywajCRC == True:
+        pierwszyZnak = CHAR_C
+    else:
+        pierwszyZnak = NAK
+
+    print("Rozpoczynanie transferu. Wysyłam znak inicjujący: ", pierwszyZnak)
+    start = time.time()
+
+    # dopoki czas (liczony od rozpoczecia 'start') nie przekroczy timeoutu 60 s, to wykonuj
+    while time.time() - start < 60:
+        # wyslij na port pierwszy znak inicjujacy komunikacje
+        port.write(pierwszyZnak)
+        # zaczekaj 10 sekund na odpowiedz
+        time.sleep(10)
+        # jesli w buforze (zwrotnie) znajdzie sie znak (odpowiedzi) to zakoncz petle
+        if port.in_waiting > 0:
+            break
+        # jesli nie ma odpowiedzi, to znowu wyslij znak inicjalizacji
+
+    # oczekuj na naglowek
+    start = time.time()
+    naglowek = None
+    while time.time() - start < timeout:
+        # jesli w buforze znajdzie sie znak odpowiedzi
+        if port.in_waiting > 0:
+            # odczytaj go
+            znakOdp = port.read(1)
+            # jesli znak odpowiedzi to SOH (poczatek bloku) to zapisz w naglowku i opusc petle
+            if znakOdp == SOH:
+                debug("Odebrano znak SOH od nadawcy!")
+                naglowek = znakOdp
+                break
+        time.sleep(0.1)
+    if naglowek is None:
+        print("Nie udało się odebrać pakietu.")
+        return False
+
+    # odczytujemy numer bloku i jego dopelnienie
+    numerBloku = port.read(1)[0]
+    numerBlokuDop = port.read(1)[0]
+    # 0xFF = 255
+    # uzywamy maski 0xFF zeby zapewnic ograniczenie zakresu 255 (jeden blok)
+    if (numerBloku + numerBlokuDop) & 0xFF != 0xFF:
+        debug(f"numerBloku={numerBloku}\n"
+              f"numerBlokuDop={numerBlokuDop}")
+        print("Błędny numer bloku.")
+        port.write(NAK)
+        return False
+
+    # odczytaj 128 bajtow danych
+    dane = port.read(ROZMIAR_BLOKU)
+    if len(dane) != ROZMIAR_BLOKU:
+        print("Wystapił błąd przy odbieraniu danych: Niepoprawny rozmiar bloku!")
+        port.write(NAK)
+        return False
+
+    if uzywajCRC:
+        bajtSprawdzenia = port.read(2)
+        otrzymaneSprawdzenie = int.from_bytes(bajtSprawdzenia, byteorder="big")
+        obliczoneSprawdzenie = obliczCRC(dane)
+    else:
+        bajtSprawdzenia = port.read(1)
+        otrzymaneSprawdzenie = bajtSprawdzenia[0]
+        obliczoneSprawdzenie = obliczChecksume(dane)
+
+    # jesli checksuma/CRC sie nie zgadza z tymi wyslanymi przez nadawce
+    if obliczoneSprawdzenie != otrzymaneSprawdzenie:
+        print(f"Sprawdzenie błędu nie udało się:\n"
+              f"Oczekiwano {obliczoneSprawdzenie}\n"
+              f"Odebrano {otrzymaneSprawdzenie}")
+        port.write(NAK)
+        return False
+    # jesli checksuma/CRC sie zgadza:
+    else:
+        # potwierdz odebranie
+        port.write(ACK)
+        # usun dopelnienie w wiadomosci i uzyj utf-8
+        komunikat = dane.rstrip(b"\x1A")
+        try:
+            komunikat.decode("utf-8")
+        except UnicodeDecodeError:
+            # jesli wystapil UnicodeDecodeError to uzyj opcji errors=replace
+            komunikat.decode("utf-8", errors="replace")
+        print(f"Pomyślnie odebrano wiadomość: '{komunikat}'")
+        return True
+
 # main
 port = ""
 while port.startswith("COM") != True:
@@ -200,16 +288,16 @@ while True:
     wybor = input("Wybierz opcję: ").strip()
     if wybor == "1":
         uzywajCRC = czyCRC()
-        message = input("Podaj wiadomość do wysłania: ")
+        komunikat = input("Podaj wiadomość do wysłania: ")
         debug(f"uzywajCRC: {uzywajCRC}\n"
-              f"message: '{message}'")
-        nadajWiadomosc(ser, message, uzywajCRC=uzywajCRC)
+              f"komunikat: '{komunikat}'")
+        nadajWiadomosc(ser, komunikat, uzywajCRC=uzywajCRC)
 
     elif wybor == "2":
         uzywajCRC = czyCRC()
         debug(f"uzywajCRC: {uzywajCRC}")
-        print("xmodem_receive_message(ser, uzywajCRC=uzywajCRC)")
-        #xmodem_receive_message(ser, uzywajCRC=uzywajCRC)
+        print("odbierzWiadomosc(ser, uzywajCRC=uzywajCRC)")
+        odbierzWiadomosc(ser, uzywajCRC=uzywajCRC)
 
     elif wybor == "3":
         break
