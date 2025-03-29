@@ -201,14 +201,13 @@ while True:
     if wybor == "1":
         uzywajCRC = czyCRC()
         message = input("Podaj wiadomość do wysłania: ")
-        debug("uzywajCRC: {uzywajCRC}\n"
-              f"message: {message}\n")
-        print("nadajWiadomosc(ser, message, uzywajCRC=uzywajCRC)")
-        #nadajWiadomosc(ser, message, uzywajCRC=uzywajCRC)
+        debug(f"uzywajCRC: {uzywajCRC}\n"
+              f"message: '{message}'")
+        nadajWiadomosc(ser, message, uzywajCRC=uzywajCRC)
 
     elif wybor == "2":
         uzywajCRC = czyCRC()
-        debug(f"uzywajCRC: {uzywajCRC}\n")
+        debug(f"uzywajCRC: {uzywajCRC}")
         print("xmodem_receive_message(ser, uzywajCRC=uzywajCRC)")
         #xmodem_receive_message(ser, uzywajCRC=uzywajCRC)
 
