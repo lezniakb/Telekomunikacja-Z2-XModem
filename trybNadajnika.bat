@@ -1,1 +1,0 @@
-python main.py send --file testNadaj.txt --port COM10 --baudrate 9600 --crc
