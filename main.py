@@ -72,7 +72,7 @@ def podzielNaBloki(wiadomosc):
     debug(bloki)
     return bloki
 
-def nadajWiadomosc(port, message, uzywajCRC=True, timeout=15):
+def nadajWiadomosc(port, message, uzywajCRC=True, timeout=10):
     # funkcja ktora wysyla wiadomosc przez protokol Xmodem
     # kazdy blok ma po 128 bajtow
     # format: [SOH][blok_num][~blok_num][128 bajtów danych][error_check]
@@ -187,7 +187,7 @@ except ValueError:
     print(f"Podano niepoprawną wartość. Ustawiono baudrate={baudrate}")
 
 try:
-    ser = serial.Serial(port, baudrate, timeout=15)
+    ser = serial.Serial(port, baudrate, timeout=10)
 except Exception as e:
     print("Wystąpił błąd przy otwieraniu porta:", e)
     sys.exit(1)
