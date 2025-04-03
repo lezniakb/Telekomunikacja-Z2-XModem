@@ -1,6 +1,6 @@
 # Telekomunikacja Zadanie 2 - protokół XModem
 ### Opis projektu
-[PL] Repozytorium zawiera algorytm implementujący protokół XModem do wysyłania oraz odbierania wiadomości. Zadanie realizowane jest w ramach przedmiotu "Telekomunikacja i przetwarzanie sygnałów" na Politechnice Łódzkiej - 4 semestr na kierunku Informatyka Stosowana.
+[PL] Repozytorium zawiera algorytm implementujący protokół XModem do wysyłania oraz odbierania wiadomości. Zadanie realizowane jest w ramach przedmiotu "*Telekomunikacja i przetwarzanie sygnałów*" na Politechnice Łódzkiej - 4 semestr na kierunku Informatyka Stosowana.
 
 [EN] The repository contains an algorithm implementing the XModem protocol for sending and receiving messages .The assignment is carried out as part of the "*Telecommunications and Signal Processing*" course at Lodz University of Technology – 4th semester in Computer Science.
 
