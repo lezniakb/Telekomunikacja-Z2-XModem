@@ -1,4 +1,10 @@
-# Ćwiczenie 2 - protokół XModem
+# Telekomunikacja Zadanie 2 - protokół XModem
+### Opis projektu
+[PL] Repozytorium zawiera algorytm implementujący protokół XModem do wysyłania oraz odbierania wiadomości. Zadanie realizowane jest w ramach przedmiotu "Telekomunikacja i przetwarzanie sygnałów" na Politechnice Łódzkiej - 4 semestr na kierunku Informatyka Stosowana.
+
+[EN] The repository contains an algorithm implementing the XModem protocol for sending and receiving messages .The assignment is carried out as part of the "*Telecommunications and Signal Processing*" course at Lodz University of Technology – 4th semester in Computer Science.
+
+## Opis zadania
 Zadaniem jest zaimplementować protokół zgodny ze specyfikacją XModem.<br />Należy przetestować go z innymi programami posiadającymy też ten protokół.<br />Emulator portów szeregowych można znaleść przykładowo pod adresem:<br />
 https://freevirtualserialports.com/<br />
 https://www.aggsoft.com/com-port-emulator.htm<br />
@@ -31,5 +37,3 @@ Prędkość transmisji ustaw na 9600 (możesz kliknąć enter)
 ## Odbierz wiadomość w main.py od Tera Term
 1. W aplikacji Tera Term wybierz File -> Transfer -> XModem -> Send, a następnie wybierz plik, który chcesz nadać. 
 2. W programie main.py wybierz opcję 2. i wybierz czy chcesz używać trybu CRC. Program niemal natychmiastowo powinien odebrać znak SOH (nagłówka wiadomości) a następnie odebrać wiadomość.
-<br />
-### ToDo: Można dodać funkcjonalność "odczytaj z pliku / zapisz do pliku" ale jeśli to będzie wymagane.
