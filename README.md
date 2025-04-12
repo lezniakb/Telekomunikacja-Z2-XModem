@@ -24,7 +24,7 @@ Uwaga: przy instalacji sterownika zaznacz "Ufaj firmie". Bez tego Windows nie uz
 4. Wprowadź komendę: install PortName=COM10 PortName=COM11
 Utworzy ona dwa wirtualne porty COM10 i COM11 oraz je powiąże między sobą. Odinstalowanie programu pozwala na wyczyszczenie zapisanych konfiguracji.
 5. Wejdź w menadżer urządzeń (device manager) w windowsie i sprawdź czy w zakładce "com0com" nie wyświetlają się znaki ostrzeżenia przy com0com.
-6. Pobierz Tera Term (jebać HyperTerminal):<br />https://github.com/TeraTermProject/teraterm/releases/tag/v5.4.0<br />
+6. Pobierz Tera Term:<br />https://github.com/TeraTermProject/teraterm/releases/tag/v5.4.0<br />
 Zatwierdź wszystkie domyślne opcje podczas instalacji.
 
 # Sprawdzanie poprawności działania
