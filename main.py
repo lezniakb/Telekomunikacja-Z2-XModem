@@ -10,7 +10,7 @@ NAK = b"\x15"       # negatywne potwierdzenie (not acknowledged)
 CAN = b"\x18"       # anuluj transmisje (cancel)
 CHAR_C = b"C"       # do trybu CRC
 ROZMIAR_BLOKU = 128    # rozmiar bloku danych
-DEBUG_FLAG = 1
+DEBUG_FLAG = 0
 
 def debug(*args, **kwargs):
     # prosta funkcja, ktora wyswietli print tylko gdy globalna flaga DEBUG jest ustawiona
@@ -23,8 +23,8 @@ def czyCRC():
     if trybCRC == "t" or trybCRC == "tak":
         print("Wybrano tryb CRC")
         uzywajCRC = True
-        print("Wybrano tryb sumy kontrolnej")
     else:
+        print("Wybrano tryb sumy kontrolnej")
         uzywajCRC = False
     return uzywajCRC
 
